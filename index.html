@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1A1710">
+<title>Field Diary</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#1A1710;--surface:#242018;--surface2:#2E2920;--border:#3A3428;--border2:#4A4438;--text:#F0EAD8;--text2:#B8AF98;--text3:#7A7060;--gold:#C8952A;--gold2:#E8B44A;--rust2:#B04820;--green2:#4A8B50;--radius:10px;--radius-sm:6px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%;overflow:hidden}
+body{font-family:'Instrument Sans',sans-serif;background:var(--bg);color:var(--text);height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;overflow:hidden}
+.app-header{flex-shrink:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between}
+.app-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:500}
+.app-title span{color:var(--gold);font-style:italic}
+.storage-badge{font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;border-radius:20px;border:1px solid var(--border2);color:var(--text3);cursor:pointer;transition:all .15s}
+.storage-badge.fs{border-color:var(--green2);color:var(--green2)}
+.storage-badge.ls{border-color:var(--gold);color:var(--gold)}
+.header-actions{display:flex;gap:8px;align-items:center}
+.icon-btn{width:36px;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all .15s}
+.icon-btn:hover{border-color:var(--gold);color:var(--gold)}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;flex-shrink:0}
+.nav-item{flex:1;padding:10px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;border:none;background:none;color:var(--text3);font-family:'Instrument Sans',sans-serif;font-size:10px;font-weight:500;letter-spacing:.04em;transition:all .15s}
+.nav-item.active{color:var(--gold)}
+.nav-item svg{width:20px;height:20px}
+.fab{position:fixed;bottom:72px;right:16px;width:56px;height:56px;border-radius:50%;background:var(--gold);color:var(--bg);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:300;box-shadow:0 4px 20px rgba(200,149,42,.4);transition:all .2s;z-index:99}
+.fab:hover{transform:scale(1.08)}.fab:active{transform:scale(.95)}
+.view{display:none;padding:16px;overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;padding-bottom:96px}.view.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+.card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.card-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.3}
+.card-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.card-meta{font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);white-space:nowrap}
+.tid-badge{display:inline-flex;align-items:center;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:3px 10px;font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--gold2)}
+.section-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin:20px 0 10px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:'Instrument Sans',sans-serif;font-size:14px;padding:10px 12px;outline:none;appearance:none}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--gold)}
+.field textarea{resize:vertical;min-height:80px}
+.field select option{background:var(--surface2)}
+.tid-range{display:flex;gap:8px;align-items:center}
+.tid-range input[type=number]{width:70px;text-align:center;font-family:'DM Mono',monospace;font-size:16px}
+.tid-separator{font-size:12px;color:var(--text3);flex-shrink:0}
+.action-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Instrument Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center}
+.action-btn:hover{border-color:var(--gold);color:var(--gold)}
+.action-btn.recording{border-color:var(--rust2);color:var(--rust2);animation:pulse 1s infinite}
+.action-btn.done{border-color:var(--green2);color:var(--green2)}
+.action-btn.primary{background:var(--gold);border-color:var(--gold);color:var(--bg);font-weight:600}
+.action-btn.primary:hover{background:var(--gold2)}
+.action-btn:disabled{opacity:.4;cursor:not-allowed}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+.photo-thumb{aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;position:relative;background:var(--surface2);border:1px solid var(--border)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.photo-thumb .rp{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.7);color:white;border:none;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+.add-photo-btn{aspect-ratio:1;border-radius:var(--radius-sm);border:1.5px dashed var(--border2);background:var(--surface2);color:var(--text3);font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.gps-indicator{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 12px;font-family:'DM Mono',monospace;font-size:12px;color:var(--text2);cursor:pointer}
+.gps-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.gps-dot.acquiring{background:var(--gold);animation:pulse 1s infinite}
+.gps-dot.acquired{background:var(--green2)}
+.find-photo{width:64px;height:64px;border-radius:var(--radius-sm);overflow:hidden;flex-shrink:0;background:var(--surface2)}
+.find-photo img{width:100%;height:100%;object-fit:cover}
+.find-row{display:flex;gap:12px;align-items:flex-start}
+.find-info{flex:1;min-width:0}
+.signal-dot{width:8px;height:8px;border-radius:50%;background:var(--border2)}
+.signal-dot.on{background:var(--gold)}
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.8);display:flex;align-items:flex-end;overflow:hidden;opacity:1;visibility:visible;transition:opacity 0.15s ease,visibility 0.15s ease;will-change:opacity}
+.modal-overlay.hidden{opacity:0;visibility:hidden;pointer-events:none}
+.modal{width:100%;max-width:480px;margin:0 auto;background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;border-top:1px solid var(--border);padding:20px 16px 40px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;transform:translateZ(0);will-change:transform}
+.modal-handle{width:40px;height:4px;border-radius:2px;background:var(--border2);margin:0 auto 16px}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:500;margin-bottom:16px}
+.tabs{display:flex;gap:4px;margin-bottom:16px}
+.tab{flex:1;padding:8px 4px;border-radius:var(--radius-sm);border:1px solid var(--border);background:none;color:var(--text3);font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;text-align:center;transition:all .15s}
+.tab.active{background:var(--surface2);border-color:var(--gold);color:var(--gold)}
+.audio-player{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 12px;display:flex;align-items:center;gap:10px}
+.audio-player audio{flex:1;height:32px}
+.empty-state{text-align:center;padding:48px 16px;color:var(--text3)}
+.empty-state .empty-icon{font-size:48px;margin-bottom:12px}
+.empty-state p{font-size:14px;line-height:1.6}
+.site-pill{display:inline-flex;align-items:center;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:4px 10px;font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s;margin-right:6px;margin-bottom:6px}
+.site-pill.active{border-color:var(--gold);color:var(--gold)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.detail-cell{background:var(--surface2);border-radius:var(--radius-sm);padding:10px}
+.detail-cell-label{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:3px}
+.detail-cell-value{font-family:'DM Mono',monospace;font-size:13px;color:var(--text)}
+.ref-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.ref-thumb{width:48px;height:48px;border-radius:var(--radius-sm);background:var(--surface2);overflow:hidden;flex-shrink:0}
+.ref-thumb img{width:100%;height:100%;object-fit:cover}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 16px;font-size:13px;color:var(--text);z-index:300;opacity:0;transition:opacity .3s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1}
+.progress{height:3px;background:var(--border2);border-radius:2px;margin-top:8px;overflow:hidden}
+.progress-bar{height:100%;background:var(--gold);border-radius:2px;transition:width .3s}
+.type-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Instrument Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center}
+.type-btn:hover{border-color:var(--gold);color:var(--text)}
+.type-btn.active{border-color:var(--gold);background:var(--surface);color:var(--gold)}
+input[type=file]{display:none}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+.site-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:10px;display:flex;flex-direction:column}
+.site-card-header{padding:14px 16px 10px;display:flex;gap:12px;align-items:flex-start}
+.site-monogram{width:40px;height:40px;border-radius:var(--radius-sm);background:var(--surface2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--gold);flex-shrink:0;letter-spacing:.02em}
+.site-card-body{padding:0 16px 12px}
+.site-find-pill{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:2px 9px;font-size:11px;color:var(--text2);font-family:'DM Mono',monospace}
+.site-card-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:6px;align-items:center}
+.site-action{padding:7px 14px;border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:12px;font-weight:500;color:var(--text2);background:var(--surface2);font-family:'Instrument Sans',sans-serif;cursor:pointer;transition:all .15s;white-space:nowrap}
+.site-action:hover{border-color:var(--gold);color:var(--gold)}
+.site-action-del{padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;color:var(--text3);background:none;font-family:'Instrument Sans',sans-serif;cursor:pointer;transition:all .15s;margin-left:auto}
+.site-action-del:hover{border-color:var(--rust2);color:var(--rust2)}
+
+/* ── Lightbox ── */
+.lightbox{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;opacity:0;visibility:hidden;transition:opacity .18s ease,visibility .18s ease}
+.lightbox.open{opacity:1;visibility:visible}
+.lightbox img{max-width:calc(100vw - 80px);max-height:calc(100vh - 80px);object-fit:contain;border-radius:4px;display:block;user-select:none}
+.lb-close{position:absolute;top:16px;right:16px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s}
+.lb-close:hover{background:rgba(255,255,255,.2)}
+.lb-arrow{position:absolute;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;user-select:none}
+.lb-arrow:hover{background:rgba(255,255,255,.2)}
+.lb-arrow.prev{left:16px}
+.lb-arrow.next{right:16px}
+.lb-counter{position:absolute;bottom:16px;left:50%;transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:12px;color:rgba(255,255,255,.5);pointer-events:none}
+.photo-thumb{cursor:zoom-in}
+
+@media(min-width:768px){
+  /* Reset mobile constraints */
+  html{overflow:auto}
+  body{max-width:100%;margin:0;flex-direction:row;height:100vh;overflow:hidden}
+
+  /* Hide mobile header — sidebar owns branding on desktop */
+  .app-header{display:none}
+
+  /* Hide mobile FAB — sidebar has the New Find button */
+  .fab{display:none !important}
+
+  /* ── Sidebar ── */
+  .bottom-nav{
+    position:relative;left:auto;bottom:auto;transform:none;
+    width:220px;min-width:220px;height:100vh;
+    flex-direction:column;justify-content:flex-start;
+    border-top:none;border-right:1px solid var(--border);
+    padding:0;gap:0;flex-shrink:0;overflow-y:auto;
+    background:var(--surface);
+  }
+
+  /* Sidebar branding zone */
+  .nav-logo{
+    display:flex !important;
+    flex-direction:column;
+    padding:20px 16px 16px;
+    border-bottom:1px solid var(--border);
+    margin-bottom:8px;
+    flex-shrink:0;
+  }
+  .nav-logo-title{
+    font-family:'Playfair Display',serif;font-size:18px;font-weight:500;
+    margin-bottom:6px;
+  }
+  .nav-logo-title span{color:var(--gold);font-style:italic}
+  .nav-logo-folder{
+    font-family:'DM Mono',monospace;font-size:11px;
+    color:var(--text3);cursor:pointer;transition:color .15s;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .nav-logo-folder:hover{color:var(--gold)}
+  .nav-logo-folder.connected{color:var(--green2)}
+
+  /* Nav items */
+  .nav-item{
+    flex:none;width:100%;flex-direction:row;justify-content:flex-start;
+    padding:10px 16px;border-radius:0;font-size:13px;
+    gap:10px;letter-spacing:0;
+    border-left:2px solid transparent;
+    transition:background .12s,color .12s,border-color .12s;
+  }
+  .nav-item:hover{background:var(--surface2);color:var(--text2)}
+  .nav-item.active{
+    background:var(--surface2);color:var(--gold);
+    border-left-color:var(--gold);
+  }
+  .nav-item svg{width:18px;height:18px;flex-shrink:0}
+
+  /* Count badge inside nav items */
+  .nav-count{
+    margin-left:auto;
+    font-family:'DM Mono',monospace;font-size:10px;
+    color:var(--text3);background:var(--surface2);
+    border:1px solid var(--border2);border-radius:20px;
+    padding:1px 7px;transition:all .15s;
+  }
+  .nav-item.active .nav-count{
+    border-color:var(--gold);color:var(--gold);opacity:.7;
+  }
+
+  /* Sidebar stats block */
+  .sidebar-stats{
+    margin-top:auto;
+    padding:14px 16px;
+    border-top:1px solid var(--border);
+    flex-shrink:0;
+  }
+  .sidebar-stats-label{
+    font-size:10px;font-weight:600;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--text3);margin-bottom:8px;
+  }
+  .sidebar-stat-row{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:5px;
+  }
+  .sidebar-stat-key{font-size:12px;color:var(--text3)}
+  .sidebar-stat-val{font-family:'DM Mono',monospace;font-size:12px;color:var(--text2)}
+
+  /* New Find button in sidebar */
+  .sidebar-new-btn{
+    display:flex !important;
+    align-items:center;justify-content:center;gap:8px;
+    margin:12px 16px 0;
+    padding:10px 12px;
+    border-radius:var(--radius-sm);
+    background:var(--gold);border:none;
+    color:var(--bg);font-family:'Instrument Sans',sans-serif;
+    font-size:13px;font-weight:600;cursor:pointer;
+    transition:background .15s;
+    flex-shrink:0;
+  }
+  .sidebar-new-btn:hover{background:var(--gold2)}
+
+  /* Main content area — no top padding for missing header */
+  .view{
+    margin-left:220px;
+    padding:28px 28px 40px;
+    height:100vh;overflow-y:auto;
+  }
+
+  /* Two-column find grid — capped width, auto-fills gracefully */
+  #finds-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+    gap:12px;
+    max-width:860px;
+  }
+  #finds-list .card{margin-bottom:0}
+
+  /* Larger content area max-width for all views */
+  .view-inner{max-width:900px}
+
+  /* Desktop type scale */
+  .card-title{font-size:15px}
+  .card-meta{font-size:11px}
+  .section-label{font-size:11px;margin:24px 0 12px}
+
+  /* Larger find photo on desktop */
+  .find-photo{width:80px;height:80px}
+
+  /* Slightly taller cards for breathing room */
+  .card{padding:16px}
+
+  /* Modals — centred dialog instead of bottom sheet */
+  .modal-overlay{align-items:center;justify-content:center}
+  .modal{border-radius:var(--radius);border:1px solid var(--border);max-width:600px;max-height:85vh;margin:0 auto}
+  .modal-handle{display:none}
+  #det-overlay .modal,#edit-overlay .modal{max-width:700px}
+
+  /* More photo columns */
+  .photo-grid{grid-template-columns:repeat(5,1fr)}
+
+  /* Three-column detail grid */
+  .detail-grid{grid-template-columns:1fr 1fr 1fr}
+
+  /* Toast positioning */
+  .toast{bottom:24px;left:240px;transform:none}
+
+  /* Reference and sites grids */
+  #ref-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  #ref-list .ref-card{margin-bottom:0}
+  #sites-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;max-width:860px}
+  #sites-list .site-card{margin-bottom:0}
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-title">Field <span>Diary</span></div>
+  <div class="header-actions">
+    <div class="storage-badge ls" id="storage-badge" onclick="showStorageInfo()">⬡ storage</div>
+    <button class="icon-btn" onclick="showExportModal()">⬇</button>
+    <button class="icon-btn" onclick="showStorageInfo()">⚙</button>
+  </div>
+</div>
+
+<div class="view active" id="view-home">
+  <div id="site-filter-row" style="display:flex;flex-wrap:wrap;margin-bottom:4px"></div>
+  <div class="section-label" id="finds-label">Recent Finds</div>
+  <div id="finds-list"></div>
+</div>
+
+<div class="view" id="view-new">
+  <button onclick="clearForm();switchView('home')" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text3);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;padding:0;margin-bottom:14px">← Back</button>
+  <div style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:14px"><span style="color:var(--gold)">+</span> New Find</div>
+
+  <!-- Find type selector -->
+  <div class="field">
+    <label>Find type</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+      <button class="type-btn active" id="type-field" onclick="setFindType('field')">
+        <span style="font-size:16px">📍</span><span>Field find</span>
+        <span style="font-size:10px;color:var(--text3);display:block">GPS acquired</span>
+      </button>
+      <button class="type-btn" id="type-backfill" onclick="setFindType('backfill')">
+        <span style="font-size:16px">✎</span><span>Backfill</span>
+        <span style="font-size:10px;color:var(--text3);display:block">Manual location</span>
+      </button>
+      <button class="type-btn" id="type-calibration" onclick="setFindType('calibration')">
+        <span style="font-size:16px">🎯</span><span>Calibration</span>
+        <span style="font-size:10px;color:var(--text3);display:block">No location</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- GPS location (field mode) -->
+  <div class="field" id="loc-field">
+    <label>GPS Location</label>
+    <div class="gps-indicator" id="gps-ind" onclick="startGPS()">
+      <div class="gps-dot" id="gps-dot"></div><span id="gps-txt">Tap to acquire location</span>
+    </div>
+    <div id="gps-coords" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);margin-top:4px;display:none"></div>
+  </div>
+
+  <!-- Manual location (backfill mode) -->
+  <div class="field" id="loc-backfill" style="display:none">
+    <label>Location</label>
+    <div id="use-site-loc" style="display:none;margin-bottom:8px">
+      <button class="action-btn" onclick="useSiteLocation()" style="border-color:var(--green2);color:var(--green2)">
+        📍 Use site location
+      </button>
+    </div>
+    <input type="text" id="manual-loc" placeholder="Paste coordinates or map link…" oninput="parseManualLocation(this.value)" style="margin-bottom:6px">
+    <div id="manual-loc-result" style="font-family:'DM Mono',monospace;font-size:11px;margin-top:2px"></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.6">
+      Accepts: <code style="background:var(--surface2);padding:1px 4px;border-radius:3px">50.0755, 14.4378</code> · Google Maps link · Mapy.cz link
+    </div>
+  </div>
+
+  <div class="field"><label>Site</label>
+    <div style="display:flex;gap:8px">
+      <select id="new-site" style="flex:1" onchange="onSiteChange(this.value)"><option value="">— select site —</option></select>
+      <button class="action-btn" style="width:auto;padding:10px 14px" onclick="showNewSiteModal()">+ New</button>
+    </div>
+  </div>
+  <div class="field"><label>Photos</label>
+    <div class="photo-grid" id="photo-grid"><div class="add-photo-btn" onclick="document.getElementById('pi').click()">＋</div></div>
+    <input type="file" id="pi" accept="image/*" multiple onchange="handlePhotos(this)">
+  </div>
+  <div class="field"><label>Target ID (TID)</label>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTidTab('manual',this)">Manual</button>
+      <button class="tab" onclick="switchTidTab('photo',this)">Photo display</button>
+    </div>
+    <div id="tid-manual">
+      <div class="tid-range">
+        <input type="number" id="tid-min" min="1" max="99" placeholder="Min" oninput="updateTidPrev()">
+        <span class="tid-separator">—</span>
+        <input type="number" id="tid-max" min="1" max="99" placeholder="Max" oninput="updateTidPrev()">
+        <div id="tid-prev" style="margin-left:auto"></div>
+      </div>
+      <label style="display:flex;gap:6px;align-items:center;margin-top:10px;cursor:pointer;font-size:13px;color:var(--text2)">
+        <input type="checkbox" id="tid-stable" style="width:auto"> Stable / consistent signal
+      </label>
+    </div>
+    <div id="tid-photo-panel" style="display:none">
+      <button class="action-btn" onclick="document.getElementById('tid-pi').click()">📷 Photo of detector display</button>
+      <input type="file" id="tid-pi" accept="image/*" onchange="handleTidPhoto(this)">
+      <div id="ocr-prev" style="display:none;margin-top:8px">
+        <img id="ocr-img" style="width:100%;border-radius:6px;margin-bottom:6px">
+        <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:8px;font-size:12px;color:var(--text3);text-align:center">Photo saved. Enter TID manually above.</div>
+      </div>
+    </div>
+  </div>
+  <div class="field"><label>Signal Quality</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div><div style="font-size:11px;color:var(--text3);margin-bottom:5px">Stability</div>
+        <div style="display:flex;gap:6px" id="stab-dots">
+          <div class="signal-dot" onclick="setSt(1)"></div><div class="signal-dot" onclick="setSt(2)"></div>
+          <div class="signal-dot" onclick="setSt(3)"></div><div class="signal-dot" onclick="setSt(4)"></div>
+          <div class="signal-dot" onclick="setSt(5)"></div>
+        </div>
+      </div>
+      <div><div style="font-size:11px;color:var(--text3);margin-bottom:5px">Repeatability</div>
+        <div style="display:flex;gap:6px" id="rep-dots">
+          <div class="signal-dot" onclick="setRp(1)"></div><div class="signal-dot" onclick="setRp(2)"></div>
+          <div class="signal-dot" onclick="setRp(3)"></div><div class="signal-dot" onclick="setRp(4)"></div>
+          <div class="signal-dot" onclick="setRp(5)"></div>
+        </div>
+      </div>
+    </div>
+    <input type="text" id="sig-notes" placeholder="Tone, width, behaviour from multiple directions…">
+  </div>
+  <div class="field"><label>Audio</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="action-btn" id="voice-btn" onclick="toggleRec('voice')">🎙 Voice memo</button>
+      <button class="action-btn" id="det-btn" onclick="toggleRec('detector')">🔊 Detector sound</button>
+    </div>
+    <div id="voice-player" class="audio-player" style="display:none;margin-top:8px">
+      <span style="font-size:11px;color:var(--text3);flex-shrink:0">Voice</span>
+      <audio id="voice-audio" controls style="flex:1;height:32px"></audio>
+    </div>
+    <div id="det-player" class="audio-player" style="display:none;margin-top:8px">
+      <span style="font-size:11px;color:var(--text3);flex-shrink:0">Signal</span>
+      <audio id="det-audio" controls style="flex:1;height:32px"></audio>
+    </div>
+  </div>
+  <div class="field"><label>Context</label>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div><div style="font-size:11px;color:var(--text3);margin-bottom:5px">Depth (cm)</div>
+        <input type="number" id="ctx-depth" min="0" max="200" placeholder="cm"></div>
+      <div><div style="font-size:11px;color:var(--text3);margin-bottom:5px">Found in</div>
+        <select id="ctx-found"><option value="">—</option><option>Ploughed field</option><option>Garden</option><option>Driveway</option><option>Meadow</option><option>Stream bank</option><option>Gravel bar</option><option>Forest</option><option>Other</option></select></div>
+    </div>
+    <input type="text" id="ctx-soil" placeholder="Soil type / conditions…">
+  </div>
+  <div class="field"><label>Identification</label>
+    <input type="text" id="id-prelim" placeholder="Preliminary ID…" style="margin-bottom:8px">
+    <textarea id="id-desc" placeholder="Description, historical context, notes…"></textarea>
+  </div>
+  <div id="save-prog" style="display:none;margin-bottom:12px">
+    <div style="font-size:12px;color:var(--text3);margin-bottom:4px" id="prog-txt">Saving…</div>
+    <div class="progress"><div class="progress-bar" id="prog-bar" style="width:0%"></div></div>
+  </div>
+  <button class="action-btn primary" onclick="saveFind()" id="save-btn">✓ Save Find</button>
+  <button class="action-btn" onclick="clearForm()" style="margin-top:8px">✕ Clear form</button>
+  <button class="action-btn" onclick="clearForm();switchView('home')" style="margin-top:8px;color:var(--text3)">← Cancel</button>
+</div>
+
+<div class="view" id="view-ref">
+  <div class="section-label">TID Reference Library</div>
+  <p style="font-size:13px;color:var(--text3);margin-bottom:16px;line-height:1.6">Your personal calibration database. Open a find and tap "Add to Reference".</p>
+  <div id="ref-list"></div>
+</div>
+
+<div class="view" id="view-sites">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:20px">
+    <div>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:500;margin-bottom:4px">Sites</div>
+      <div style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace" id="sites-page-sub">—</div>
+    </div>
+    <button class="action-btn primary" style="width:auto;padding:9px 16px;font-size:13px;flex-shrink:0" onclick="showNewSiteModal()">+ Add Site</button>
+  </div>
+  <div id="sites-list"></div>
+</div>
+
+<!-- Mobile FAB — hidden on desktop via CSS -->
+<button class="fab" onclick="switchView('new')" id="fab">+</button>
+
+<nav class="bottom-nav">
+  <!-- Branding zone (desktop only — hidden on mobile) -->
+  <div class="nav-logo">
+    <div class="nav-logo-title">Field <span>Diary</span></div>
+    <div class="nav-logo-folder" id="nav-folder-badge" onclick="showStorageInfo()">⬡ no folder connected</div>
+  </div>
+
+  <!-- New Find button (desktop sidebar, hidden on mobile) -->
+  <button class="sidebar-new-btn" style="display:none" onclick="switchView('new')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+    New Find
+  </button>
+
+  <!-- Nav items -->
+  <button class="nav-item active" id="nav-home" onclick="switchView('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    Finds
+    <span class="nav-count" id="nav-count-finds">0</span>
+  </button>
+  <button class="nav-item" id="nav-sites" onclick="switchView('sites')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+    Sites
+    <span class="nav-count" id="nav-count-sites">0</span>
+  </button>
+  <button class="nav-item" id="nav-ref" onclick="switchView('ref')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+    Reference
+    <span class="nav-count" id="nav-count-ref">0</span>
+  </button>
+
+  <!-- Stats block (desktop only — visible via flex layout) -->
+  <div class="sidebar-stats" id="sidebar-stats" style="display:none">
+    <div class="sidebar-stats-label">Summary</div>
+    <div class="sidebar-stat-row">
+      <span class="sidebar-stat-key">Total finds</span>
+      <span class="sidebar-stat-val" id="ss-finds">—</span>
+    </div>
+    <div class="sidebar-stat-row">
+      <span class="sidebar-stat-key">Sites</span>
+      <span class="sidebar-stat-val" id="ss-sites">—</span>
+    </div>
+    <div class="sidebar-stat-row">
+      <span class="sidebar-stat-key">Reference</span>
+      <span class="sidebar-stat-val" id="ss-ref">—</span>
+    </div>
+    <div class="sidebar-stat-row" id="ss-latest-row" style="display:none">
+      <span class="sidebar-stat-key">Latest</span>
+      <span class="sidebar-stat-val" id="ss-latest" style="font-size:11px;text-align:right;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">—</span>
+    </div>
+  </div>
+</nav>
+
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div><div id="modal-body"></div>
+  </div>
+</div>
+<div class="modal-overlay hidden" id="det-overlay">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle" onclick="closeDet()" style="cursor:pointer"></div>
+    <div id="det-body"></div>
+  </div>
+</div>
+<div class="modal-overlay hidden" id="edit-overlay">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle" onclick="closeEdit()" style="cursor:pointer"></div>
+    <div id="edit-body"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const FSS='showDirectoryPicker'in window;
+let dirH=null,photosH=null,audioH=null;
+let db={sites:[],finds:[],version:2};
+let curView='home',gpsC=null,recType=null,mr=null,ac=[],ablobs={voice:null,detector:null};
+let newPhotos=[],tidDP=null,stab=0,rep=0,activeSF=null,curFindType='field';
+let _detPhotoUrls=[];
+
+// ── IndexedDB handle persistence ──
+function idbOp(mode,fn){return new Promise(res=>{try{const r=indexedDB.open('fd_h',1);r.onupgradeneeded=e=>e.target.result.createObjectStore('h');r.onsuccess=e=>fn(e.target.result,res);r.onerror=()=>res(null);}catch{res(null);}});}
+async function loadH(){return idbOp('r',async(idb,res)=>{const t=idb.transaction('h','readonly'),g=t.objectStore('h').get('dir');g.onsuccess=async()=>{if(g.result){try{const p=await g.result.queryPermission({mode:'readwrite'});if(p==='granted'||p==='prompt'){dirH=g.result;if(p==='granted')await initSub();}}catch{}};res();};g.onerror=()=>res();});}
+async function saveH(h){return idbOp('rw',(idb,res)=>{const t=idb.transaction('h','readwrite');t.objectStore('h').put(h,'dir');t.oncomplete=()=>res();t.onerror=()=>res();});}
+async function initSub(){try{photosH=await dirH.getDirectoryHandle('photos',{create:true});audioH=await dirH.getDirectoryHandle('audio',{create:true});}catch{}}
+
+function updateBadge(){
+  const b=document.getElementById('storage-badge');
+  const nb=document.getElementById('nav-folder-badge');
+  if(dirH){
+    b.textContent='📁 '+dirH.name;b.className='storage-badge fs';
+    if(nb){nb.textContent='📁 '+dirH.name;nb.className='nav-logo-folder connected';}
+  }else{
+    b.textContent='⚠ no folder';b.className='storage-badge ls';
+    if(nb){nb.textContent='⬡ no folder connected';nb.className='nav-logo-folder';}
+  }
+}
+
+function updateSidebarStats(){
+  const isDesktop=window.innerWidth>=768;
+  const nf=document.getElementById('nav-count-finds');
+  const ns=document.getElementById('nav-count-sites');
+  const nr=document.getElementById('nav-count-ref');
+  if(nf)nf.textContent=db.finds.length;
+  if(ns)ns.textContent=db.sites.length;
+  if(nr)nr.textContent=db.finds.filter(f=>f.isReference).length;
+  const stats=document.getElementById('sidebar-stats');
+  if(!stats)return;
+  if(!isDesktop){stats.style.display='none';return;}
+  stats.style.display='block';
+  const sf=document.getElementById('ss-finds');
+  const ss=document.getElementById('ss-sites');
+  const sr=document.getElementById('ss-ref');
+  const sl=document.getElementById('ss-latest');
+  const slr=document.getElementById('ss-latest-row');
+  if(sf)sf.textContent=db.finds.length;
+  if(ss)ss.textContent=db.sites.length;
+  if(sr)sr.textContent=db.finds.filter(f=>f.isReference).length;
+  if(db.finds.length>0&&sl&&slr){
+    const latest=db.finds[0];
+    const id=latest.identification&&latest.identification.preliminary||'Unidentified';
+    sl.textContent=id;sl.title=id;
+    slr.style.display='flex';
+  }else if(slr){slr.style.display='none';}
+}
+
+async function reqFolder(){
+  if(!FSS){showNoFSS();return;}
+  try{
+    const h=await window.showDirectoryPicker({mode:'readwrite',id:'fd'});
+    dirH=h;
+    await initSub();
+    await saveH(dirH);
+    updateBadge();
+    await loadDB();
+    renderFinds();
+    updateSiteDrop();
+    closeModal();
+    toast('📁 Folder connected — '+dirH.name);
+  }catch(e){if(e.name!=='AbortError')toast('Error: '+e.message);}
+}
+
+function showNoFSS(){
+  document.getElementById('modal-body').innerHTML=
+    '<div class="modal-title">Browser not supported</div>'+
+    '<p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px">'+
+    'The File System Access API requires <strong style="color:var(--text)">Chrome or Edge</strong> on Android or desktop.<br><br>'+
+    'Open this file in Chrome and try again.</p>'+
+    '<button class="action-btn primary" onclick="closeModal()">OK</button>';
+  openModal();
+}
+
+function showFolderRequired(){
+  document.getElementById('modal-body').innerHTML=
+    '<div class="modal-title">Choose a folder to start</div>'+
+    '<p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:16px">'+
+    'Field Diary stores everything — finds, photos, audio — as real files in a folder you choose.<br><br>'+
+    'Choose a <strong style="color:var(--text)">Google Drive folder</strong> for automatic cloud backup, '+
+    'or any folder on your device.</p>'+
+    '<button class="action-btn primary" onclick="reqFolder()" style="margin-bottom:8px">📁 Choose Folder</button>'+
+    '<div style="font-size:11px;color:var(--text3);text-align:center;margin-top:6px">Requires Chrome or Edge</div>';
+  openModal();
+}
+
+// ── DB — folder only ──
+async function loadDB(){
+  if(!dirH)return;
+  try{
+    const p=await dirH.requestPermission({mode:'readwrite'});
+    if(p!=='granted'){showFolderRequired();return;}
+    const fh=await dirH.getFileHandle('diary.json',{create:true});
+    const file=await fh.getFile();
+    const text=await file.text();
+    if(text.trim()){
+      const parsed=JSON.parse(text);
+      db.sites=parsed.sites||[];
+      db.finds=parsed.finds||[];
+    }
+  }catch(e){db={sites:[],finds:[],version:2};}
+}
+
+async function saveDB(){
+  if(!dirH){toast('No folder connected');return;}
+  try{
+    const fh=await dirH.getFileHandle('diary.json',{create:true});
+    const w=await fh.createWritable();
+    await w.write(JSON.stringify(db,null,2));
+    await w.close();
+  }catch(e){toast('Save failed: '+e.message);}
+}
+
+// ── File IO ──
+async function saveFile(fh,name,blob){const h=await fh.getFileHandle(name,{create:true});const w=await h.createWritable();await w.write(blob);await w.close();}
+async function readFile(fh,name){try{const h=await fh.getFileHandle(name);const f=await h.getFile();return URL.createObjectURL(f);}catch{return null;}}
+async function delFile(fh,name){try{await fh.removeEntry(name);}catch{}}
+
+// ── Photos ──
+function handlePhotos(inp){Array.from(inp.files).forEach(f=>{const r=new FileReader();r.onload=e=>{newPhotos.push({blob:f,dataUrl:e.target.result});renderGrid();};r.readAsDataURL(f);});inp.value='';}
+function renderGrid(){const g=document.getElementById('photo-grid');g.innerHTML='';newPhotos.forEach((p,i)=>{const d=document.createElement('div');d.className='photo-thumb';d.innerHTML='<img src="'+p.dataUrl+'"><button class="rp" onclick="rmPhoto('+i+')">×</button>';g.appendChild(d);});const a=document.createElement('div');a.className='add-photo-btn';a.textContent='＋';a.onclick=()=>document.getElementById('pi').click();g.appendChild(a);}
+function rmPhoto(i){newPhotos.splice(i,1);renderGrid();}
+function handleTidPhoto(inp){const f=inp.files[0];if(!f)return;tidDP=f;const r=new FileReader();r.onload=e=>{document.getElementById('ocr-img').src=e.target.result;document.getElementById('ocr-prev').style.display='block';};r.readAsDataURL(f);inp.value='';}
+
+// ── TID ──
+function switchTidTab(t,el){document.querySelectorAll('.tabs .tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');document.getElementById('tid-manual').style.display=t==='manual'?'block':'none';document.getElementById('tid-photo-panel').style.display=t==='photo'?'block':'none';}
+function updateTidPrev(){const mn=document.getElementById('tid-min').value,mx=document.getElementById('tid-max').value,p=document.getElementById('tid-prev');if(mn){const v=(mx&&mx!==mn)?mn+'–'+mx:mn;p.innerHTML='<span class="tid-badge">'+v+'</span>';}else p.innerHTML='';}
+
+// ── Signal dots ──
+function setSt(n){stab=n;document.querySelectorAll('#stab-dots .signal-dot').forEach((d,i)=>d.classList.toggle('on',i<n));}
+function setRp(n){rep=n;document.querySelectorAll('#rep-dots .signal-dot').forEach((d,i)=>d.classList.toggle('on',i<n));}
+
+// ── Audio ──
+async function toggleRec(type){const btn=document.getElementById(type==='voice'?'voice-btn':'det-btn');if(mr&&mr.state==='recording'&&recType===type){mr.stop();btn.className='action-btn done';btn.textContent=type==='voice'?'✓ Voice saved':'✓ Signal saved';recType=null;return;}
+if(location.protocol==='file:'){toast('Audio needs HTTPS — see Settings → Hosting');return;}
+try{const s=await navigator.mediaDevices.getUserMedia({audio:true});ac=[];mr=new MediaRecorder(s);recType=type;mr.ondataavailable=e=>ac.push(e.data);mr.onstop=()=>{const b=new Blob(ac,{type:'audio/webm'});ablobs[type]=b;const u=URL.createObjectURL(b);document.getElementById(type==='voice'?'voice-player':'det-player').style.display='flex';document.getElementById(type==='voice'?'voice-audio':'det-audio').src=u;s.getTracks().forEach(t=>t.stop());};mr.start();btn.className='action-btn recording';btn.textContent='⏹ Stop';}catch{toast('Microphone access denied — check site permissions');}}
+// ── GPS ──
+function startGPS(){const dot=document.getElementById('gps-dot'),txt=document.getElementById('gps-txt'),co=document.getElementById('gps-coords');dot.className='gps-dot acquiring';txt.textContent='Acquiring…';co.style.display='none';if(!navigator.geolocation){txt.textContent='GPS unavailable';return;}navigator.geolocation.getCurrentPosition(p=>{gpsC={lat:p.coords.latitude,lon:p.coords.longitude,acc:Math.round(p.coords.accuracy)};dot.className='gps-dot acquired';txt.textContent='±'+gpsC.acc+'m';co.style.display='block';co.textContent=gpsC.lat.toFixed(6)+'°N  '+gpsC.lon.toFixed(6)+'°E';},()=>{dot.className='gps-dot';txt.textContent='Unavailable — tap to retry';gpsC=null;},{enableHighAccuracy:true,timeout:15000});}
+
+// ── Save Find ──
+async function saveFind(){
+  const tMin=parseInt(document.getElementById('tid-min').value)||null;
+  const tMax=parseInt(document.getElementById('tid-max').value)||null;
+  const siteId=document.getElementById('new-site').value;
+  const prelim=document.getElementById('id-prelim').value.trim();
+  // GPS validation depends on mode
+  if(curFindType==='field'&&!gpsC&&!confirm('No GPS location. Save anyway?'))return;
+  if(curFindType==='backfill'&&!gpsC&&!confirm('No location entered. Save without location?'))return;
+  if(!prelim&&!confirm('No identification. Save anyway?'))return;
+  const fid=Date.now().toString();
+  const sb=document.getElementById('save-btn'),pd=document.getElementById('save-prog'),pt=document.getElementById('prog-txt'),pb=document.getElementById('prog-bar');
+  sb.disabled=true;pd.style.display='block';
+  const find={
+    id:fid,siteId:siteId||null,
+    timestamp:new Date().toISOString(),
+    findType:curFindType,
+    coords:gpsC,
+    photoRefs:[],tidDisplayRef:null,audioRefs:{voice:null,detector:null},
+    tid:{min:tMin,max:tMax||tMin,stable:document.getElementById('tid-stable').checked},
+    signal:{stability:stab,repeatability:rep,notes:document.getElementById('sig-notes').value.trim()},
+    context:{depth:parseInt(document.getElementById('ctx-depth').value)||null,foundIn:document.getElementById('ctx-found').value,soil:document.getElementById('ctx-soil').value.trim()},
+    identification:{preliminary:prelim,description:document.getElementById('id-desc').value.trim()},
+    // Calibration entries are auto-added to reference library
+    isReference:curFindType==='calibration'
+  };
+  const total=newPhotos.length+(tidDP?1:0)+(ablobs.voice?1:0)+(ablobs.detector?1:0)+1;let step=0;
+  const prog=p=>{pb.style.width=p+'%';};
+  for(let i=0;i<newPhotos.length;i++){pt.textContent='Saving photo '+(i+1)+'/'+newPhotos.length;const ext=newPhotos[i].blob.type.includes('png')?'png':'jpg';const fn='find_'+fid+'_p'+(i+1)+'.'+ext;await saveFile(photosH,fn,newPhotos[i].blob);find.photoRefs.push(fn);step++;prog(Math.round(step/total*85));}
+  if(tidDP){pt.textContent='Saving display photo…';const fn='find_'+fid+'_disp.'+(tidDP.type.includes('png')?'png':'jpg');await saveFile(photosH,fn,tidDP);find.tidDisplayRef=fn;step++;prog(Math.round(step/total*88));}
+  if(ablobs.voice){pt.textContent='Saving voice memo…';const fn='find_'+fid+'_voice.webm';await saveFile(audioH,fn,ablobs.voice);find.audioRefs.voice=fn;step++;prog(Math.round(step/total*92));}
+  if(ablobs.detector){pt.textContent='Saving signal…';const fn='find_'+fid+'_sig.webm';await saveFile(audioH,fn,ablobs.detector);find.audioRefs.detector=fn;step++;prog(Math.round(step/total*95));}
+  pt.textContent='Saving diary…';db.finds.unshift(find);await saveDB();prog(100);pt.textContent='Saved ✓';
+  setTimeout(()=>{pd.style.display='none';sb.disabled=false;pb.style.width='0%';clearForm();switchView('home');updateSidebarStats();toast(curFindType==='calibration'?'Calibration entry saved — added to Reference ✓':'Find saved ✓');},600);
+}
+
+function clearForm(){
+  ['tid-min','tid-max','sig-notes','ctx-depth','ctx-soil','id-prelim','id-desc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('ctx-found').value='';
+  document.getElementById('tid-stable').checked=false;
+  document.getElementById('tid-prev').innerHTML='';
+  document.getElementById('voice-player').style.display='none';
+  document.getElementById('det-player').style.display='none';
+  document.getElementById('ocr-prev').style.display='none';
+  document.getElementById('voice-btn').className='action-btn';
+  document.getElementById('voice-btn').textContent='🎙 Voice memo';
+  document.getElementById('det-btn').className='action-btn';
+  document.getElementById('det-btn').textContent='🔊 Detector sound';
+  const ml=document.getElementById('manual-loc');if(ml)ml.value='';
+  const mr=document.getElementById('manual-loc-result');if(mr)mr.textContent='';
+  newPhotos=[];ablobs={voice:null,detector:null};tidDP=null;stab=0;rep=0;gpsC=null;
+  setSt(0);setRp(0);renderGrid();
+  // Reset to field mode
+  setFindType('field');
+}
+
+function setFindType(type){
+  curFindType=type;
+  // Update button states
+  ['field','backfill','calibration'].forEach(t=>{
+    document.getElementById('type-'+t).classList.toggle('active',t===type);
+  });
+  // Show/hide location sections
+  document.getElementById('loc-field').style.display=type==='field'?'block':'none';
+  document.getElementById('loc-backfill').style.display=type==='backfill'?'block':'none';
+  // Auto-start GPS for field mode, clear coords for others
+  if(type==='field'){
+    startGPS();
+  } else {
+    gpsC=null;
+    document.getElementById('gps-dot').className='gps-dot';
+    document.getElementById('gps-txt').textContent='Tap to acquire location';
+    document.getElementById('gps-coords').style.display='none';
+  }
+  // Update site location button visibility for backfill mode
+  const sel=document.getElementById('new-site');
+  if(sel)onSiteChange(sel.value);
+}
+
+function onSiteChange(siteId){
+  // Show "Use site location" button only in backfill mode when site has coordinates
+  const btn=document.getElementById('use-site-loc');
+  if(!btn)return;
+  if(curFindType!=='backfill'){btn.style.display='none';return;}
+  const site=db.sites.find(s=>s.id===siteId);
+  btn.style.display=(site&&site.coords)?'block':'none';
+}
+
+function useSiteLocation(){
+  const siteId=document.getElementById('new-site').value;
+  const site=db.sites.find(s=>s.id===siteId);
+  if(!site||!site.coords)return;
+  const {lat,lon}=site.coords;
+  // Populate the manual location field and parse it
+  const input=document.getElementById('manual-loc');
+  input.value=lat.toFixed(6)+', '+lon.toFixed(6);
+  parseManualLocation(input.value);
+  toast('Location set from site "'+site.name+'"');
+}
+
+function parseManualLocation(val){
+  const result=document.getElementById('manual-loc-result');
+  if(!val.trim()){result.textContent='';gpsC=null;return;}
+  let lat=null,lon=null;
+
+  // Pattern 1: raw coordinates "50.0755, 14.4378" or "50.0755 14.4378"
+  let m=val.match(/(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)/);
+  if(m){lat=parseFloat(m[1]);lon=parseFloat(m[2]);}
+
+  // Pattern 2: Google Maps ?q=lat,lon
+  if(!lat){m=val.match(/[?&]q=(-?\d+\.?\d*),(-?\d+\.?\d*)/);if(m){lat=parseFloat(m[1]);lon=parseFloat(m[2]);}}
+
+  // Pattern 3: Mapy.cz x=lon&y=lat
+  if(!lat){
+    const mx=val.match(/[?&]x=(-?\d+\.?\d*)/);
+    const my=val.match(/[?&]y=(-?\d+\.?\d*)/);
+    if(mx&&my){lon=parseFloat(mx[1]);lat=parseFloat(my[1]);}
+  }
+
+  // Pattern 4: Google Maps @lat,lon
+  if(!lat){m=val.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);if(m){lat=parseFloat(m[1]);lon=parseFloat(m[2]);}}
+
+  if(lat&&lon&&lat>=-90&&lat<=90&&lon>=-180&&lon<=180){
+    gpsC={lat,lon,acc:null,manual:true};
+    result.innerHTML='<span style="color:var(--green2)">✓ '+lat.toFixed(6)+'°N, '+lon.toFixed(6)+'°E</span>';
+  } else {
+    gpsC=null;
+    result.innerHTML=val.includes('goo.gl')?
+      '<span style="color:var(--gold)">Shortened link — paste the full URL instead</span>':
+      '<span style="color:var(--rust2)">Could not parse coordinates</span>';
+  }
+}
+async function resPhoto(ref){if(!ref)return null;if(ref.startsWith('data:'))return ref;return await readFile(photosH,ref);}
+async function resAudio(ref){if(!ref)return null;if(ref.startsWith('data:'))return ref;return await readFile(audioH,ref);}
+
+// ── Render finds ──
+async function renderFinds(){
+  const list=document.getElementById('finds-list'),label=document.getElementById('finds-label');
+  let finds=[...db.finds];
+  if(activeSF)finds=finds.filter(f=>f.siteId===activeSF);
+  renderSiteFilter();
+  if(finds.length===0){
+    list.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><p>No finds yet.<br>Tap <strong>+</strong> to record your first find.</p></div>';
+    updateSidebarStats();
+    return;
+  }
+  label.textContent=finds.length+' Find'+(finds.length!==1?'s':'');
+  updateSidebarStats();
+
+  // Build all HTML at once — single DOM write
+  list.innerHTML=finds.map(f=>{
+    const site=db.sites.find(s=>s.id===f.siteId);
+    const ds=new Date(f.timestamp).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'});
+    const ts=f.tid&&f.tid.min?(f.tid.max&&f.tid.max!==f.tid.min?f.tid.min+'–'+f.tid.max:''+f.tid.min):'—';
+    const typeIcon=f.findType==='backfill'?'✎\u2006':f.findType==='calibration'?'🎯\u2006':'';
+
+    // Signal dots — only render if stability data exists
+    const sb=f.signal&&f.signal.stability
+      ?'<div style="display:flex;gap:3px;align-items:center">'+
+        [1,2,3,4,5].map(i=>'<div class="signal-dot'+(i<=f.signal.stability?' on':'')+'"></div>').join('')+
+        '</div>'
+      :'';
+
+    // Meta row: TID badge + site name — these are the key classifier fields
+    const metaRow=[]
+    if(f.tid&&f.tid.min)metaRow.push('<span class="tid-badge">TID\u2006'+ts+'</span>');
+    if(site)metaRow.push('<span style="font-size:11px;color:var(--text3);font-family:\'DM Mono\',monospace">'+site.name+'</span>');
+
+    // Footer: GPS coords (tertiary) + signal dots
+    const footer=[];
+    if(f.coords)footer.push('<a href="https://maps.google.com/?q='+f.coords.lat.toFixed(6)+','+f.coords.lon.toFixed(6)+'&z=18&t=k" target="_blank" onclick="event.stopPropagation()" style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--text3);text-decoration:none">📍\u2006'+f.coords.lat.toFixed(5)+',\u2006'+f.coords.lon.toFixed(5)+'</a>');
+    if(sb)footer.push(sb);
+
+    return '<div class="card" onclick="showDet(\''+f.id+'\')" style="cursor:pointer">'+
+      '<div class="find-row">'+
+        '<div class="find-photo" id="th-'+f.id+'"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:20px">⬡</div></div>'+
+        '<div class="find-info">'+
+          // Hero: title + date
+          '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px">'+
+            '<div class="card-title">'+typeIcon+(f.identification&&f.identification.preliminary||'Unidentified')+'</div>'+
+            '<div class="card-meta" style="flex-shrink:0;padding-top:2px">'+ds+'</div>'+
+          '</div>'+
+          // Meta: TID + site
+          (metaRow.length?'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">'+metaRow.join('')+'</div>':'')+
+          // Footer: GPS + signal
+          (footer.length?'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px">'+footer.join('')+'</div>':'')+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  // Load thumbnails asynchronously — each update is a single targeted img injection
+  // Use requestAnimationFrame to avoid mid-paint updates causing flicker
+  finds.forEach(f=>{
+    if(!f.photoRefs||!f.photoRefs[0])return;
+    resPhoto(f.photoRefs[0]).then(u=>{
+      if(!u)return;
+      const el=document.getElementById('th-'+f.id);
+      if(!el)return;
+      // Only update if thumbnail not already set
+      if(el.querySelector('img'))return;
+      requestAnimationFrame(()=>{
+        const img=document.createElement('img');
+        img.src=u;
+        img.style.cssText='width:100%;height:100%;object-fit:cover';
+        el.innerHTML='';
+        el.appendChild(img);
+      });
+    });
+  });
+}
+
+function renderSiteFilter(){const row=document.getElementById('site-filter-row');if(db.sites.length===0){row.innerHTML='';return;}row.innerHTML='<span class="site-pill'+(!activeSF?' active':'')+'" onclick="filterS(null)">All</span>'+db.sites.map(s=>'<span class="site-pill'+(activeSF===s.id?' active':'')+'" onclick="filterS(\''+s.id+'\')">'+s.name+'</span>').join('');}
+function filterS(id){activeSF=id;renderFinds();}
+
+// ── Detail ──
+async function showDet(id){
+  const f=db.finds.find(x=>x.id===id);if(!f)return;
+  const site=db.sites.find(s=>s.id===f.siteId);
+  const date=new Date(f.timestamp).toLocaleString('en-GB');
+  const ts=f.tid&&f.tid.min?(f.tid.max&&f.tid.max!==f.tid.min?f.tid.min+'–'+f.tid.max:''+f.tid.min):'—';
+
+  // Resolve all async media BEFORE showing the overlay — eliminates the blink
+  const pUrls=[];
+  if(f.photoRefs)for(const r of f.photoRefs){const u=await resPhoto(r);if(u)pUrls.push(u);}
+  const vU=f.audioRefs&&f.audioRefs.voice?await resAudio(f.audioRefs.voice):null;
+  const dU=f.audioRefs&&f.audioRefs.detector?await resAudio(f.audioRefs.detector):null;
+
+  // Store resolved URLs in JS — blob URLs must not be serialised to DOM attributes
+  _detPhotoUrls=pUrls;
+
+  const pH=pUrls.length
+    ?'<div class="photo-grid" style="margin-bottom:12px">'+
+      pUrls.map((u,i)=>
+        '<div class="photo-thumb" onclick="lbOpenDet('+i+')" title="View full size">'+
+          '<img src="'+u+'">'+
+        '</div>'
+      ).join('')+
+    '</div>'
+    :'';
+  const aH=(vU?'<div class="audio-player" style="margin-bottom:8px"><span style="font-size:11px;color:var(--text3);flex-shrink:0">Voice</span><audio controls src="'+vU+'" style="flex:1;height:32px"></audio></div>':'')+(dU?'<div class="audio-player" style="margin-bottom:8px"><span style="font-size:11px;color:var(--text3);flex-shrink:0">Signal</span><audio controls src="'+dU+'" style="flex:1;height:32px"></audio></div>':'');
+
+  // Write content and show overlay in one step — no intermediate state
+  document.getElementById('det-body').innerHTML=
+    '<button onclick="closeDet()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text3);font-family:\'Instrument Sans\',sans-serif;font-size:13px;cursor:pointer;padding:0;margin-bottom:14px">← Back</button>'+
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div><div style="font-family:\'Playfair Display\',serif;font-size:18px;font-weight:500;margin-bottom:4px">'+(f.identification&&f.identification.preliminary||'Unidentified')+'</div><div style="font-size:12px;color:var(--text3)">'+date+(site?' · '+site.name:'')+(f.findType==='backfill'?' · <span style=\"color:var(--gold)\">✎ backfill</span>':f.findType==='calibration'?' · <span style=\"color:var(--green2)\">🎯 calibration</span>':'')+'</div></div>'+(f.tid&&f.tid.min?'<span class="tid-badge" style="font-size:14px;padding:5px 14px">TID '+ts+'</span>':'')+'</div>'+pH+
+    '<div class="detail-grid">'+
+    (f.coords?'<div class="detail-cell" style="grid-column:1/-1"><div class="detail-cell-label">GPS</div><div class="detail-cell-value" style="font-size:11px;margin-bottom:6px">'+f.coords.lat.toFixed(6)+'°N, '+f.coords.lon.toFixed(6)+'°E</div><div style="display:flex;gap:6px"><a href="https://maps.google.com/?q='+f.coords.lat.toFixed(6)+','+f.coords.lon.toFixed(6)+'&z=18&t=k" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 8px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:12px;color:var(--text2);text-decoration:none">🌍 Google Maps</a><a href="https://mapy.cz/letecka?x='+f.coords.lon.toFixed(6)+'&y='+f.coords.lat.toFixed(6)+'&z=18" target="_blank" style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 8px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);font-size:12px;color:var(--text2);text-decoration:none">🗺 Mapy.cz</a></div></div>':'')+
+    (f.context&&f.context.depth?'<div class="detail-cell"><div class="detail-cell-label">Depth</div><div class="detail-cell-value">'+f.context.depth+' cm</div></div>':'')+
+    (f.signal&&f.signal.stability?'<div class="detail-cell"><div class="detail-cell-label">Stability</div><div class="detail-cell-value">'+'●'.repeat(f.signal.stability)+'○'.repeat(5-f.signal.stability)+'</div></div>':'')+
+    (f.signal&&f.signal.repeatability?'<div class="detail-cell"><div class="detail-cell-label">Repeatability</div><div class="detail-cell-value">'+'●'.repeat(f.signal.repeatability)+'○'.repeat(5-f.signal.repeatability)+'</div></div>':'')+
+    (f.context&&f.context.foundIn?'<div class="detail-cell"><div class="detail-cell-label">Found in</div><div class="detail-cell-value" style="font-size:12px">'+f.context.foundIn+'</div></div>':'')+
+    (f.context&&f.context.soil?'<div class="detail-cell"><div class="detail-cell-label">Soil</div><div class="detail-cell-value" style="font-size:12px">'+f.context.soil+'</div></div>':'')+
+    '</div>'+
+    (f.signal&&f.signal.notes?'<div style="background:var(--surface2);border-radius:6px;padding:10px;margin-bottom:10px;font-size:13px;color:var(--text2)">'+f.signal.notes+'</div>':'')+
+    (f.identification&&f.identification.description?'<div style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:10px">'+f.identification.description+'</div>':'')+
+    aH+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">'+
+    '<button class="action-btn" onclick="showEdit(\''+f.id+'\')">✏ Edit</button>'+
+    (f.isReference?
+      '<button class="action-btn" style="color:var(--green2);border-color:var(--green2)" onclick="toggleRef(\''+f.id+'\')">★ In Reference</button>':
+      '<button class="action-btn" onclick="toggleRef(\''+f.id+'\')">☆ Add to Reference</button>')+
+    (curView==='ref'?
+      '<button class="action-btn" style="color:var(--text3);border-color:var(--border2)" onclick="removeFromRef(\''+f.id+'\')">✕ Remove from ref</button>':
+      '<button class="action-btn" style="color:var(--rust2);border-color:var(--rust2)" onclick="delFind(\''+f.id+'\')">🗑 Delete find</button>')+
+    '</div>';
+  // Show overlay only after content is fully written — single render, no blink
+  document.getElementById('det-overlay').classList.remove('hidden');
+  pushState('det');
+}
+function closeDet(){document.getElementById('det-overlay').classList.add('hidden');}
+function closeEdit(){document.getElementById('edit-overlay').classList.add('hidden');editNewPhotos=[];editAblobs={voice:null,detector:null};editId=null;window._removedPhotoRefs=[];}
+
+// ── Back button / browser history support ──
+function pushState(name){history.pushState({overlay:name},'',location.pathname)}
+
+// Helper — switch view without pushing history (used inside popstate handler)
+function restoreView(n){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+n).classList.add('active');
+  const ne=document.getElementById('nav-'+n);if(ne)ne.classList.add('active');
+  document.getElementById('fab').style.display=n==='new'?'none':'flex';
+  curView=n;
+  if(n==='home')renderFinds();
+  if(n==='ref')renderRef();
+  if(n==='sites')renderSites();
+}
+
+window.addEventListener('popstate',()=>{
+  // Priority 0 — lightbox
+  if(document.getElementById('lightbox').classList.contains('open')){
+    lbHistoryPushed=false;  // popstate already consumed the entry
+    lbClose();return;
+  }
+  // Priority 1 — edit overlay
+  if(!document.getElementById('edit-overlay').classList.contains('hidden')){
+    closeEdit();return;
+  }
+  // Priority 2 — detail overlay
+  if(!document.getElementById('det-overlay').classList.contains('hidden')){
+    closeDet();return;
+  }
+  // Priority 3 — any modal
+  if(!document.getElementById('modal-overlay').classList.contains('hidden')){
+    document.getElementById('modal-overlay').classList.add('hidden');return;
+  }
+  // Priority 4 — non-home views go back to home
+  const nonHome=['new','sites','ref'];
+  for(const v of nonHome){
+    if(document.getElementById('view-'+v).classList.contains('active')){
+      if(v==='new')clearForm();
+      restoreView('home');
+      return;
+    }
+  }
+  // Already on home — let browser handle naturally (exit/history)
+});
+async function delFind(id){if(!confirm('Delete this find?'))return;const f=db.finds.find(x=>x.id===id);if(f){if(photosH)for(const r of(f.photoRefs||[]))await delFile(photosH,r);if(audioH){if(f.audioRefs&&f.audioRefs.voice)await delFile(audioH,f.audioRefs.voice);if(f.audioRefs&&f.audioRefs.detector)await delFile(audioH,f.audioRefs.detector);}}db.finds=db.finds.filter(f=>f.id!==id);await saveDB();closeDet();renderFinds();updateSidebarStats();toast('Deleted');}
+async function toggleRef(id){
+  const f=db.finds.find(x=>x.id===id);if(!f)return;
+  if(!f.identification||!f.identification.preliminary){toast('Add an identification first');return;}
+  f.isReference=!f.isReference;
+  await saveDB();
+  updateSidebarStats();
+  // Refresh detail view to show updated button state
+  await showDet(id);
+  toast(f.isReference?'Added to reference library':'Removed from reference library');
+}
+
+async function removeFromRef(id){
+  const f=db.finds.find(x=>x.id===id);if(!f)return;
+  f.isReference=false;
+  await saveDB();
+  closeDet();
+  renderRef();
+  toast('Removed from reference library');
+}
+
+// ── Edit ──
+let editId=null,editNewPhotos=[],editAblobs={voice:null,detector:null};
+
+async function showEdit(id){
+  const f=db.finds.find(x=>x.id===id);if(!f)return;
+  editId=id;editNewPhotos=[];editAblobs={voice:null,detector:null};
+
+  // Load existing photo URLs for preview
+  const pUrls=[];
+  if(f.photoRefs)for(const r of f.photoRefs){const u=await resPhoto(r);if(u)pUrls.push({ref:r,url:u});}
+
+  const tidMin=f.tid&&f.tid.min||'';
+  const tidMax=f.tid&&f.tid.max&&f.tid.max!==f.tid.min?f.tid.max:'';
+  const sites=db.sites.map(s=>'<option value="'+s.id+'"'+(s.id===f.siteId?' selected':'')+'>'+s.name+'</option>').join('');
+
+  document.getElementById('edit-body').innerHTML=
+    '<button onclick="closeEdit()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:var(--text3);font-family:\'Instrument Sans\',sans-serif;font-size:13px;cursor:pointer;padding:0;margin-bottom:14px">← Cancel</button>'+
+    '<div class="modal-title">✏ Edit Find</div>'+
+
+    // Identification
+    '<div class="field"><label>Identification</label>'+
+    '<input type="text" id="e-prelim" value="'+esc(f.identification&&f.identification.preliminary||'')+'" placeholder="Preliminary ID…" style="margin-bottom:8px">'+
+    '<textarea id="e-desc" placeholder="Description, historical context…" style="min-height:70px">'+esc(f.identification&&f.identification.description||'')+'</textarea></div>'+
+
+    // Site
+    '<div class="field"><label>Site</label>'+
+    '<select id="e-site"><option value="">— none —</option>'+sites+'</select></div>'+
+
+    // TID
+    '<div class="field"><label>TID</label>'+
+    '<div class="tid-range">'+
+    '<input type="number" id="e-tid-min" min="1" max="99" placeholder="Min" value="'+tidMin+'" style="width:70px;text-align:center;font-family:\'DM Mono\',monospace;font-size:16px">'+
+    '<span class="tid-separator">—</span>'+
+    '<input type="number" id="e-tid-max" min="1" max="99" placeholder="Max" value="'+tidMax+'" style="width:70px;text-align:center;font-family:\'DM Mono\',monospace;font-size:16px">'+
+    '</div>'+
+    '<label style="display:flex;gap:6px;align-items:center;margin-top:8px;cursor:pointer;font-size:13px;color:var(--text2)">'+
+    '<input type="checkbox" id="e-tid-stable" style="width:auto"'+(f.tid&&f.tid.stable?' checked':'')+'> Stable signal</label></div>'+
+
+    // Context
+    '<div class="field"><label>Context</label>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'+
+    '<div><div style="font-size:11px;color:var(--text3);margin-bottom:5px">Depth (cm)</div>'+
+    '<input type="number" id="e-depth" min="0" max="200" placeholder="cm" value="'+(f.context&&f.context.depth||'')+'" style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:\'Instrument Sans\',sans-serif;font-size:14px;padding:10px 12px;outline:none;width:100%"></div>'+
+    '<div><div style="font-size:11px;color:var(--text3);margin-bottom:5px">Found in</div>'+
+    '<select id="e-found" style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:\'Instrument Sans\',sans-serif;font-size:14px;padding:10px 12px;outline:none;appearance:none;width:100%">'+
+    '<option value="">—</option>'+
+    ['Ploughed field','Garden','Driveway','Meadow','Stream bank','Gravel bar','Forest','Other'].map(o=>'<option'+(f.context&&f.context.foundIn===o?' selected':'')+'>'+o+'</option>').join('')+
+    '</select></div></div>'+
+    '<input type="text" id="e-soil" value="'+esc(f.context&&f.context.soil||'')+'" placeholder="Soil type / conditions…" style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:\'Instrument Sans\',sans-serif;font-size:14px;padding:10px 12px;outline:none;width:100%"></div>'+
+
+    // Signal notes
+    '<div class="field"><label>Signal notes</label>'+
+    '<input type="text" id="e-sig" value="'+esc(f.signal&&f.signal.notes||'')+'" placeholder="Tone, width, behaviour…" style="background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-family:\'Instrument Sans\',sans-serif;font-size:14px;padding:10px 12px;outline:none;width:100%"></div>'+
+
+    // Existing photos
+    '<div class="field"><label>Photos ('+pUrls.length+' existing — tap to remove)</label>'+
+    '<div id="e-photo-grid" class="photo-grid">'+
+    pUrls.map((p,i)=>'<div class="photo-thumb" id="ep-'+i+'"><img src="'+p.url+'"><button class="rp" onclick="removeEditPhoto('+i+',\''+p.ref+'\')">×</button></div>').join('')+
+    '<div class="add-photo-btn" onclick="document.getElementById(\'e-pi\').click()">＋</div>'+
+    '</div>'+
+    '<input type="file" id="e-pi" accept="image/*" multiple onchange="handleEditPhotos(this)">'+
+    '<div id="e-new-photo-preview" style="font-size:11px;color:var(--green2);margin-top:4px;display:none"></div></div>'+
+
+    // Audio — replace options
+    '<div class="field"><label>Audio</label>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+    '<button class="action-btn" id="e-voice-btn" onclick="toggleEditRec(\'voice\')">🎙 '+(f.audioRefs&&f.audioRefs.voice?'Replace voice':'Add voice')+'</button>'+
+    '<button class="action-btn" id="e-det-btn" onclick="toggleEditRec(\'detector\')">🔊 '+(f.audioRefs&&f.audioRefs.detector?'Replace signal':'Add signal')+'</button>'+
+    '</div>'+
+    '<div id="e-voice-player" class="audio-player" style="display:none;margin-top:8px"><span style="font-size:11px;color:var(--text3);flex-shrink:0">New voice</span><audio id="e-voice-audio" controls style="flex:1;height:32px"></audio></div>'+
+    '<div id="e-det-player" class="audio-player" style="display:none;margin-top:8px"><span style="font-size:11px;color:var(--text3);flex-shrink:0">New signal</span><audio id="e-det-audio" controls style="flex:1;height:32px"></audio></div></div>'+
+
+    // Save
+    '<div id="e-prog" style="display:none;margin-bottom:10px"><div style="font-size:12px;color:var(--text3);margin-bottom:4px" id="e-prog-txt">Saving…</div><div class="progress"><div class="progress-bar" id="e-prog-bar" style="width:0%"></div></div></div>'+
+    '<button class="action-btn primary" id="e-save-btn" onclick="saveEdit()">✓ Save Changes</button>'+
+    '<button class="action-btn" onclick="closeEdit()" style="margin-top:8px">Cancel</button>';
+
+  // Store refs to remove
+  window._editPhotoRefs=[...(f.photoRefs||[])];
+  window._removedPhotoRefs=[];
+  document.getElementById('edit-overlay').classList.remove('hidden');
+  pushState('edit');
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+function removeEditPhoto(idx,ref){
+  // Mark for removal (will be deleted on save)
+  if(!window._removedPhotoRefs)window._removedPhotoRefs=[];
+  window._removedPhotoRefs.push(ref);
+  window._editPhotoRefs=window._editPhotoRefs.filter(r=>r!==ref);
+  const el=document.getElementById('ep-'+idx);
+  if(el){el.style.opacity='0.3';el.querySelector('.rp').disabled=true;}
+  toast('Photo will be removed on save');
+}
+
+function handleEditPhotos(inp){
+  Array.from(inp.files).forEach(f=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      editNewPhotos.push({blob:f,dataUrl:e.target.result});
+      const prev=document.getElementById('e-new-photo-preview');
+      prev.style.display='block';
+      prev.textContent=editNewPhotos.length+' new photo'+(editNewPhotos.length!==1?'s':'')+' to add';
+    };
+    r.readAsDataURL(f);
+  });
+  inp.value='';
+}
+
+let editMR=null,editAC=[],editRecType=null;
+async function toggleEditRec(type){
+  const btn=document.getElementById(type==='voice'?'e-voice-btn':'e-det-btn');
+  if(editMR&&editMR.state==='recording'&&editRecType===type){
+    editMR.stop();btn.className='action-btn done';
+    btn.textContent=type==='voice'?'✓ Voice recorded':'✓ Signal recorded';
+    editRecType=null;return;
+  }
+  if(location.protocol==='file:'){
+    toast('Audio needs HTTPS — see Settings → Hosting');
+    return;
+  }
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({audio:true});
+    editAC=[];editMR=new MediaRecorder(s);editRecType=type;
+    editMR.ondataavailable=e=>editAC.push(e.data);
+    editMR.onstop=()=>{
+      const blob=new Blob(editAC,{type:'audio/webm'});
+      editAblobs[type]=blob;
+      const u=URL.createObjectURL(blob);
+      const pl=document.getElementById(type==='voice'?'e-voice-player':'e-det-player');
+      pl.style.display='flex';
+      document.getElementById(type==='voice'?'e-voice-audio':'e-det-audio').src=u;
+      s.getTracks().forEach(t=>t.stop());
+    };
+    editMR.start();btn.className='action-btn recording';btn.textContent='⏹ Stop';
+  }catch{toast('Microphone access denied — check site permissions');}
+}
+
+async function saveEdit(){
+  const f=db.finds.find(x=>x.id===editId);if(!f)return;
+  const sb=document.getElementById('e-save-btn'),pd=document.getElementById('e-prog'),pt=document.getElementById('e-prog-txt'),pb=document.getElementById('e-prog-bar');
+  sb.disabled=true;pd.style.display='block';
+
+  // Update text fields
+  f.identification=f.identification||{};
+  f.identification.preliminary=document.getElementById('e-prelim').value.trim();
+  f.identification.description=document.getElementById('e-desc').value.trim();
+  f.siteId=document.getElementById('e-site').value||null;
+  const tMin=parseInt(document.getElementById('e-tid-min').value)||null;
+  const tMax=parseInt(document.getElementById('e-tid-max').value)||null;
+  f.tid=f.tid||{};
+  f.tid.min=tMin;f.tid.max=tMax||tMin;f.tid.stable=document.getElementById('e-tid-stable').checked;
+  f.context=f.context||{};
+  f.context.depth=parseInt(document.getElementById('e-depth').value)||null;
+  f.context.foundIn=document.getElementById('e-found').value;
+  f.context.soil=document.getElementById('e-soil').value.trim();
+  f.signal=f.signal||{};
+  f.signal.notes=document.getElementById('e-sig').value.trim();
+  f.editedAt=new Date().toISOString();
+
+  const total=editNewPhotos.length+(editAblobs.voice?1:0)+(editAblobs.detector?1:0)+1;
+  let step=0;const prog=p=>{pb.style.width=p+'%';};
+
+  // Remove deleted photos
+  if(window._removedPhotoRefs&&window._removedPhotoRefs.length>0){
+    for(const r of window._removedPhotoRefs)await delFile(photosH,r);
+    f.photoRefs=(f.photoRefs||[]).filter(r=>!(window._removedPhotoRefs||[]).includes(r));
+    window._removedPhotoRefs=[];
+  }
+
+  // Add new photos
+  for(let i=0;i<editNewPhotos.length;i++){
+    pt.textContent='Saving photo '+(i+1)+'/'+editNewPhotos.length+'…';
+    const ext=editNewPhotos[i].blob.type.includes('png')?'png':'jpg';
+    const fn='find_'+editId+'_p'+Date.now()+'_'+i+'.'+ext;
+    await saveFile(photosH,fn,editNewPhotos[i].blob);
+    f.photoRefs.push(fn);step++;prog(Math.round(step/total*80));
+  }
+
+  // Replace audio if new recording
+  if(editAblobs.voice){
+    pt.textContent='Saving voice memo…';
+    if(f.audioRefs&&f.audioRefs.voice&&!f.audioRefs.voice.startsWith('data:'))await delFile(audioH,f.audioRefs.voice);
+    const fn='find_'+editId+'_voice_'+Date.now()+'.webm';
+    await saveFile(audioH,fn,editAblobs.voice);
+    f.audioRefs=f.audioRefs||{};f.audioRefs.voice=fn;
+    step++;prog(Math.round(step/total*90));
+  }
+  if(editAblobs.detector){
+    pt.textContent='Saving detector sound…';
+    if(f.audioRefs&&f.audioRefs.detector&&!f.audioRefs.detector.startsWith('data:'))await delFile(audioH,f.audioRefs.detector);
+    const fn='find_'+editId+'_sig_'+Date.now()+'.webm';
+    await saveFile(audioH,fn,editAblobs.detector);
+    f.audioRefs=f.audioRefs||{};f.audioRefs.detector=fn;
+    step++;prog(Math.round(step/total*95));
+  }
+
+  pt.textContent='Saving diary…';await saveDB();prog(100);pt.textContent='Saved ✓';
+  editNewPhotos=[];editAblobs={voice:null,detector:null};editId=null;
+
+  setTimeout(async()=>{
+    closeEdit();
+    await showDet(f.id);
+    renderFinds();
+    toast('Changes saved ✓');
+  },500);
+}
+
+// ── Reference ──
+async function renderRef(){const refs=db.finds.filter(f=>f.isReference),list=document.getElementById('ref-list');if(refs.length===0){list.innerHTML='<div class="empty-state"><div class="empty-icon">📚</div><p>No reference entries yet.</p></div>';return;}list.innerHTML=refs.map(f=>{const ts=f.tid&&f.tid.min?(f.tid.max&&f.tid.max!==f.tid.min?f.tid.min+'–'+f.tid.max:''+f.tid.min):'—';return'<div class="ref-card" onclick="showDet(\''+f.id+'\')"><div class="ref-thumb" id="rt-'+f.id+'"><div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:20px">⬡</div></div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500;margin-bottom:4px">'+f.identification.preliminary+'</div>'+(f.tid&&f.tid.min?'<span class="tid-badge">TID '+ts+'</span>':'')+(f.signal&&f.signal.notes?'<div style="font-size:12px;color:var(--text3);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+f.signal.notes+'</div>':'')+'</div></div>';}).join('');refs.forEach(async f=>{if(f.photoRefs&&f.photoRefs[0]){const u=await resPhoto(f.photoRefs[0]);const el=document.getElementById('rt-'+f.id);if(el&&u)el.innerHTML='<img src="'+u+'">';}});}
+
+// ── Sites ──
+let siteGpsC=null;
+
+function renderSites(){
+  const list=document.getElementById('sites-list');
+  // Update page subtitle
+  const sub=document.getElementById('sites-page-sub');
+  if(sub){
+    const total=db.finds.length;
+    sub.textContent=db.sites.length+' site'+(db.sites.length!==1?'s':'')+' · '+total+' find'+(total!==1?'s':'')+' total';
+  }
+  if(db.sites.length===0){list.innerHTML='<div class="empty-state"><div class="empty-icon">🗺</div><p>No sites yet.<br>Add a site to organise your finds by location.</p></div>';return;}
+  list.innerHTML=db.sites.map(s=>{
+    const c=db.finds.filter(f=>f.siteId===s.id).length;
+    // Monogram: up to 2 initials from the site name
+    const words=s.name.trim().split(/\s+/);
+    const mono=words.length>=2
+      ?(words[0][0]+words[words.length-1][0]).toUpperCase()
+      :s.name.slice(0,2).toUpperCase();
+    const ds=new Date(s.created).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'});
+    const gpsLink=s.coords
+      ?'<a href="https://maps.google.com/?q='+s.coords.lat.toFixed(6)+','+s.coords.lon.toFixed(6)+'&z=16&t=k" target="_blank" '+
+        'style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--text3);text-decoration:none;display:inline-block;margin-top:6px">'+
+        '📍\u2006'+s.coords.lat.toFixed(5)+',\u2006'+s.coords.lon.toFixed(5)+'</a>'
+      :'';
+    return '<div class="site-card">'+
+      // Header: monogram + name + find pill + date
+      '<div class="site-card-header">'+
+        '<div class="site-monogram">'+mono+'</div>'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:5px;line-height:1.2">'+s.name+'</div>'+
+          '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
+            '<span class="site-find-pill">'+
+              '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>'+
+              c+' find'+(c!==1?'s':'')+'</span>'+
+            '<span style="font-family:\'DM Mono\',monospace;font-size:10px;color:var(--text3)">'+ds+'</span>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      // Body: always rendered so footer aligns across cards in the same row
+      '<div class="site-card-body" style="flex:1">'+
+        (s.description?'<div style="font-size:13px;color:var(--text2);line-height:1.55;margin-bottom:'+(s.coords?'6px':'0')+'">'+s.description+'</div>':'')+
+        gpsLink+
+      '</div>'+
+      // Footer: actions
+      '<div class="site-card-footer">'+
+        '<button class="site-action" onclick="filterS(\''+s.id+'\');switchView(\'home\')">🔍 View finds</button>'+
+        '<button class="site-action" onclick="showEditSiteModal(\''+s.id+'\')">✏ Edit</button>'+
+        '<button class="site-action-del" title="Delete site" onclick="deleteSite(\''+s.id+'\')">🗑</button>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+function siteGpsWidget(){
+  return '<div class="gps-indicator" onclick="startSiteGPS()" style="margin-bottom:6px">'+
+    '<div class="gps-dot" id="sg-dot"></div>'+
+    '<span id="sg-txt">Tap to record site location (optional)</span>'+
+  '</div>'+
+  '<div id="sg-coords" style="font-family:\'DM Mono\',monospace;font-size:11px;color:var(--text3);display:none"></div>';
+}
+
+function startSiteGPS(){
+  const dot=document.getElementById('sg-dot'),txt=document.getElementById('sg-txt'),co=document.getElementById('sg-coords');
+  if(!dot)return;
+  dot.className='gps-dot acquiring';txt.textContent='Acquiring…';
+  if(!navigator.geolocation){txt.textContent='GPS unavailable';return;}
+  navigator.geolocation.getCurrentPosition(p=>{
+    siteGpsC={lat:p.coords.latitude,lon:p.coords.longitude,acc:Math.round(p.coords.accuracy)};
+    dot.className='gps-dot acquired';
+    txt.textContent='±'+siteGpsC.acc+'m accuracy';
+    co.style.display='block';co.textContent=siteGpsC.lat.toFixed(6)+'°N  '+siteGpsC.lon.toFixed(6)+'°E';
+  },()=>{dot.className='gps-dot';txt.textContent='Unavailable — tap to retry';},{enableHighAccuracy:true,timeout:15000});
+}
+
+function showNewSiteModal(){
+  siteGpsC=null;
+  document.getElementById('modal-body').innerHTML=
+    '<div class="modal-title">New Site</div>'+
+    '<div class="field"><label>Name</label><input type="text" id="sni" placeholder="e.g. North field"></div>'+
+    '<div class="field"><label>Description (optional)</label><textarea id="sdi" placeholder="Historical context, notes…" style="min-height:60px"></textarea></div>'+
+    '<div class="field"><label>Location (optional)</label>'+siteGpsWidget()+'</div>'+
+    '<button class="action-btn primary" onclick="saveNewSite()">Save Site</button>';
+  openModal();
+  setTimeout(()=>document.getElementById('sni').focus(),100);
+}
+
+async function saveNewSite(){
+  const name=document.getElementById('sni').value.trim();
+  if(!name){toast('Enter a name');return;}
+  const site={id:Date.now().toString(),name,description:document.getElementById('sdi').value.trim(),coords:siteGpsC,created:new Date().toISOString()};
+  db.sites.push(site);await saveDB();siteGpsC=null;
+  closeModal();updateSiteDrop();
+  const sel=document.getElementById('new-site');if(sel)sel.value=site.id;
+  toast('"'+name+'" created');if(curView==='sites')renderSites();
+}
+
+function showEditSiteModal(id){
+  const s=db.sites.find(x=>x.id===id);if(!s)return;
+  siteGpsC=s.coords||null;
+  document.getElementById('modal-body').innerHTML=
+    '<div class="modal-title">Edit Site</div>'+
+    '<div class="field"><label>Name</label><input type="text" id="sni" value="'+esc(s.name)+'"></div>'+
+    '<div class="field"><label>Description</label><textarea id="sdi" style="min-height:60px">'+esc(s.description||'')+'</textarea></div>'+
+    '<div class="field"><label>Location</label>'+siteGpsWidget()+
+    (s.coords?'<div style="font-size:11px;color:var(--green2);margin-top:4px">✓ Current: '+s.coords.lat.toFixed(5)+', '+s.coords.lon.toFixed(5)+' — tap above to update</div>':'')+'</div>'+
+    '<button class="action-btn primary" onclick="saveEditSite(\''+id+'\')" style="margin-bottom:8px">✓ Save Changes</button>'+
+    '<button class="action-btn" style="color:var(--rust2);border-color:var(--rust2)" onclick="deleteSite(\''+id+'\')">🗑 Delete Site</button>';
+  openModal();
+}
+
+async function saveEditSite(id){
+  const s=db.sites.find(x=>x.id===id);if(!s)return;
+  const name=document.getElementById('sni').value.trim();
+  if(!name){toast('Enter a name');return;}
+  s.name=name;
+  s.description=document.getElementById('sdi').value.trim();
+  if(siteGpsC)s.coords=siteGpsC;
+  siteGpsC=null;
+  await saveDB();closeModal();updateSiteDrop();renderSites();
+  toast('"'+name+'" updated');
+}
+
+async function deleteSite(id){
+  const s=db.sites.find(x=>x.id===id);if(!s)return;
+  const orphans=db.finds.filter(f=>f.siteId===id).length;
+  const msg=orphans>0?
+    'Delete "'+s.name+'"?\n'+orphans+' find'+(orphans!==1?'s':'')+' will become unassigned but are not deleted.':
+    'Delete "'+s.name+'"?';
+  if(!confirm(msg))return;
+  db.finds.forEach(f=>{if(f.siteId===id)f.siteId=null;});
+  db.sites=db.sites.filter(x=>x.id!==id);
+  if(activeSF===id)activeSF=null;
+  await saveDB();
+  closeModal();updateSiteDrop();renderSites();renderFinds();
+  toast('"'+s.name+'" deleted'+(orphans>0?', '+orphans+' find'+(orphans!==1?'s':'')+' unassigned':''));
+}
+
+function updateSiteDrop(){const sel=document.getElementById('new-site'),curr=sel.value;sel.innerHTML='<option value="">— select site —</option>'+db.sites.map(s=>'<option value="'+s.id+'"'+(s.id===curr?' selected':'')+'>'+s.name+'</option>').join('');}
+
+
+// ── Export ──
+function showExportModal(){
+  const c=db.finds.length;
+  document.getElementById('modal-body').innerHTML=
+    '<div class="modal-title">Export</div>'+
+    '<p style="font-size:13px;color:var(--text2);margin-bottom:12px">'+c+' find'+(c!==1?'s':'')+' in diary.</p>'+
+    (dirH?'<div style="background:var(--surface2);border:1px solid var(--green2);border-radius:6px;padding:10px;margin-bottom:12px;font-size:12px;color:var(--green2)">📁 Data is already saved as real files in <strong>'+dirH.name+'</strong>.</div>':'')+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'+
+    '<button class="action-btn" onclick="expJSON()">⬇ JSON<br><span style="font-size:10px;color:var(--text3)">Full backup</span></button>'+
+    '<button class="action-btn" onclick="expCSV()">⬇ CSV<br><span style="font-size:10px;color:var(--text3)">Spreadsheet</span></button>'+
+    '</div>'+
+    '<button class="action-btn" onclick="document.getElementById(\'imp-inp\').click()">⬆ Import JSON</button>'+
+    '<input type="file" id="imp-inp" accept=".json" onchange="impJSON(this)">';
+  openModal();
+}
+function expJSON(){const b=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='detecting_diary_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(u);toast('JSON exported');}
+function expCSV(){const h=['Date','Site','TID Min','TID Max','Stable','Lat','Lon','Acc m','Depth cm','Found In','Soil','Stability','Repeatability','Signal Notes','ID','Description'];const rows=db.finds.map(f=>{const s=db.sites.find(x=>x.id===f.siteId);return[new Date(f.timestamp).toLocaleString('en-GB'),s?s.name:'',f.tid&&f.tid.min||'',f.tid&&f.tid.max||'',f.tid&&f.tid.stable?'Y':'N',f.coords?f.coords.lat.toFixed(6):'',f.coords?f.coords.lon.toFixed(6):'',f.coords?f.coords.acc:'',f.context&&f.context.depth||'',f.context&&f.context.foundIn||'',f.context&&f.context.soil||'',f.signal&&f.signal.stability||'',f.signal&&f.signal.repeatability||'',f.signal&&f.signal.notes||'',f.identification&&f.identification.preliminary||'',f.identification&&f.identification.description||''].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',');});const csv=[h.join(','),...rows].join('\n'),b=new Blob([csv],{type:'text/csv'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download='detecting_diary_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(u);toast('CSV exported');}
+async function impJSON(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=async e=>{try{const im=JSON.parse(e.target.result);if(!im.finds||!im.sites)throw new Error();if(confirm('Import '+im.finds.length+' finds + '+im.sites.length+' sites? Merges.')){const ei=new Set(db.finds.map(f=>f.id));im.finds.forEach(f=>{if(!ei.has(f.id))db.finds.push(f);});const es=new Set(db.sites.map(s=>s.id));im.sites.forEach(s=>{if(!es.has(s.id))db.sites.push(s);});db.finds.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));await saveDB();closeModal();renderFinds();updateSiteDrop();toast('Import successful');}}catch{toast('Invalid file');}};r.readAsText(f);inp.value='';}
+
+// ── Storage info ──
+function showStorageInfo(){
+  const connected=!!dirH;
+  const isFile=location.protocol==='file:';
+  document.getElementById('modal-body').innerHTML=
+    '<div class="modal-title">Storage & Hosting</div>'+
+    (connected?
+      '<div style="background:linear-gradient(135deg,#1a2e1a,#1e2a18);border:1px solid var(--green2);border-radius:var(--radius);padding:14px;margin-bottom:12px">'+
+      '<div style="color:var(--green2);font-family:\'Playfair Display\',serif;font-size:15px;margin-bottom:6px">📁 '+dirH.name+'</div>'+
+      '<div style="font-size:12px;color:var(--text2);line-height:1.6">All finds, photos, and audio are stored as real files in this folder. diary.json is human-readable.</div>'+
+      '</div>':
+      '<div style="background:linear-gradient(135deg,#2a1f0a,#241a08);border:1px solid var(--gold);border-radius:var(--radius);padding:14px;margin-bottom:12px">'+
+      '<div style="color:var(--gold2);font-family:\'Playfair Display\',serif;font-size:15px;margin-bottom:6px">⚠ No folder connected</div>'+
+      '</div>')+
+    '<button class="action-btn primary" onclick="reqFolder()" style="margin-bottom:12px">📁 '+(connected?'Change folder':'Connect folder')+'</button>'+
+    (isFile?
+      '<div style="background:linear-gradient(135deg,#1a1a2e,#181825);border:1px solid #534AB7;border-radius:var(--radius);padding:14px;margin-bottom:12px">'+
+      '<div style="color:#8B85E8;font-family:\'Playfair Display\',serif;font-size:15px;margin-bottom:6px">🔒 Audio needs HTTPS</div>'+
+      '<div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px">'+
+      'Microphone access is blocked when running from a local file (<code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-size:11px">file://</code>). '+
+      'To enable audio recording, host this file over HTTPS.<br><br>'+
+      '<strong style="color:var(--text)">Free option — GitHub Pages:</strong><br>'+
+      '1. Create a free account at github.com<br>'+
+      '2. New repository → upload field_diary.html<br>'+
+      '3. Settings → Pages → Deploy from main branch<br>'+
+      '4. Your URL: <em>username</em>.github.io/<em>repo</em><br><br>'+
+      'Open that URL in Chrome on your phone — all features including microphone will work. Your folder connection is remembered by Chrome across both the local file and the hosted version separately.'+
+      '</div>'+
+      '</div>':'')+ 
+    '<div style="background:var(--surface2);border-radius:6px;padding:10px 12px;font-family:\'DM Mono\',monospace;font-size:11px;color:var(--text3);margin-bottom:12px">'+
+    db.finds.length+' finds · '+db.sites.length+' sites</div>'+
+    '<button class="action-btn" style="color:var(--rust2);border-color:var(--rust2)" onclick="if(confirm(\'Clear all diary records? Files in your folder are NOT deleted.\')){db={sites:[],finds:[]};saveDB();closeModal();renderFinds();updateSiteDrop();toast(\'Records cleared\');}">🗑 Clear diary records</button>';
+  openModal();
+}
+
+// ── Nav ──
+function switchView(n){
+  if(curView===n&&n!=='new')return;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+n).classList.add('active');
+  const ne=document.getElementById('nav-'+n);if(ne)ne.classList.add('active');
+  document.getElementById('fab').style.display=n==='new'?'none':'flex';
+  curView=n;
+  if(n==='home')renderFinds();
+  if(n==='ref'){renderRef();pushState('ref');}
+  if(n==='sites'){renderSites();pushState('sites');}
+  if(n==='new'){
+    clearForm();
+    // Pre-select active site filter if one is set
+    if(activeSF){
+      updateSiteDrop();
+      document.getElementById('new-site').value=activeSF;
+    }
+    startGPS();
+    pushState('new');
+  }
+  // home never pushes — it is the base state
+}
+function closeModal(e){if(!e||e.target===document.getElementById('modal-overlay'))document.getElementById('modal-overlay').classList.add('hidden');}
+function openModal(){
+  document.getElementById('modal-overlay').classList.remove('hidden');
+  pushState('modal');
+}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
+
+// ── Init ──
+async function init(){
+  if(!FSS){ showNoFSS(); return; }
+  await loadH();
+  if(dirH){
+    try{
+      // queryPermission needs no user gesture — check silently first
+      const q=await dirH.queryPermission({mode:'readwrite'});
+      if(q==='granted'){
+        await initSub();
+        await loadDB();
+        updateBadge();
+        updateSiteDrop();
+        updateSidebarStats();
+        if(db.finds.length===0){ await seedFirstRun(); }
+        renderFinds();
+        applyDesktopUI();
+        return;
+      }
+      // Permission state is 'prompt' — handle is valid, just needs re-grant
+      // Show the finds list immediately with a reconnect banner
+      // Don't call requestPermission here — it needs a user gesture
+      updateBadge();
+      showReconnectBanner();
+      applyDesktopUI();
+      return;
+    }catch(e){}
+  }
+  // No folder at all — must connect fresh
+  updateBadge();
+  applyDesktopUI();
+  showFolderRequired();
+}
+
+function showReconnectBanner(){
+  document.getElementById('finds-list').innerHTML=
+    '<div style="background:linear-gradient(135deg,#2a1f0a,#241a08);border:1px solid var(--gold);border-radius:var(--radius);padding:16px;margin-bottom:12px">'+
+    '<div style="color:var(--gold2);font-family:\'Playfair Display\',serif;font-size:15px;margin-bottom:6px">📁 Reconnect folder</div>'+
+    '<div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:12px">'+
+    'Chrome needs permission re-granted to access <strong style="color:var(--text)">'+dirH.name+'</strong>.<br>'+
+    'Tap below to reconnect — your data is safe in the folder.</div>'+
+    '<button class="action-btn primary" onclick="reconnectFolder()">📁 Reconnect '+dirH.name+'</button>'+
+    '</div>';
+}
+
+async function reconnectFolder(){
+  if(!dirH)return;
+  try{
+    const p=await dirH.requestPermission({mode:'readwrite'});
+    if(p==='granted'){
+      await initSub();
+      await loadDB();
+      updateBadge();
+      updateSiteDrop();
+      updateSidebarStats();
+      if(db.finds.length===0){ await seedFirstRun(); }
+      renderFinds();
+      toast('📁 Reconnected — '+dirH.name);
+    }else{
+      toast('Permission denied — tap ⚙ to choose folder');
+    }
+  }catch(e){toast('Could not reconnect: '+e.message);}
+}
+
+async function seedFirstRun(){
+  const sid='demo_site_'+Date.now();
+  db.sites.push({id:sid,name:'Demo site',description:'Example site — replace with your own location and notes.',coords:null,created:new Date().toISOString()});
+  db.finds.push({id:'demo_seed',siteId:sid,timestamp:new Date().toISOString(),coords:null,photoRefs:[],tidDisplayRef:null,audioRefs:{voice:null,detector:null},tid:{min:78,max:85,stable:true},signal:{stability:5,repeatability:5,notes:'Very clean, consistent from all 4 directions. Classic high-conductor flat-disc response.'},context:{depth:8,foundIn:'Garden',soil:'Agricultural loam, moderate mineralisation'},identification:{preliminary:'Example find — .50 BMG cartridge case (1944)',description:'This is a demo record showing all available fields. Replace with your own find data. A .50 BMG cartridge is a classic high-conductor target with stable TID in the 78–85 range.'},isReference:true});
+  await saveDB();
+}
+
+function applyDesktopUI(){
+  const isDesktop=window.innerWidth>=768;
+  // Stats block visibility
+  const stats=document.getElementById('sidebar-stats');
+  if(stats)stats.style.display=isDesktop?'block':'none';
+  // Sidebar New Find button visibility
+  const snb=document.querySelector('.sidebar-new-btn');
+  if(snb)snb.style.display=isDesktop?'flex':'none';
+  // Mobile FAB visibility (only show on non-new views)
+  const fab=document.getElementById('fab');
+  if(fab&&!isDesktop)fab.style.display=curView==='new'?'none':'flex';
+  if(isDesktop)updateSidebarStats();
+}
+
+window.addEventListener('resize',applyDesktopUI);
+
+// ── Lightbox ──
+let lbUrls=[],lbIdx=0,lbHistoryPushed=false;
+
+function lbOpenDet(idx){
+  if(!_detPhotoUrls.length)return;
+  lbOpen(_detPhotoUrls,idx);
+}
+
+function lbOpen(urls,idx){
+  lbUrls=urls;lbIdx=idx;
+  lbRender();
+  document.getElementById('lightbox').classList.add('open');
+  document.addEventListener('keydown',lbKey);
+  pushState('lightbox');
+  lbHistoryPushed=true;
+}
+
+function lbClose(){
+  document.getElementById('lightbox').classList.remove('open');
+  document.removeEventListener('keydown',lbKey);
+  setTimeout(()=>{document.getElementById('lb-img').src='';},200);
+  // If closed manually (not via popstate), consume the history entry we pushed
+  if(lbHistoryPushed){lbHistoryPushed=false;history.back();}
+}
+
+function lbRender(){
+  const img=document.getElementById('lb-img');
+  const prev=document.getElementById('lb-prev');
+  const next=document.getElementById('lb-next');
+  const ctr=document.getElementById('lb-counter');
+  img.src=lbUrls[lbIdx];
+  prev.style.display=lbUrls.length>1?'flex':'none';
+  next.style.display=lbUrls.length>1?'flex':'none';
+  ctr.textContent=lbUrls.length>1?(lbIdx+1)+' / '+lbUrls.length:'';
+}
+
+function lbStep(dir){
+  lbIdx=(lbIdx+dir+lbUrls.length)%lbUrls.length;
+  lbRender();
+}
+
+function lbKey(e){
+  if(e.key==='Escape')lbClose();
+  if(e.key==='ArrowRight')lbStep(1);
+  if(e.key==='ArrowLeft')lbStep(-1);
+}
+
+function lbClickOutside(e){
+  // Close only when clicking the backdrop itself, not the image or buttons
+  if(e.target===document.getElementById('lightbox'))lbClose();
+}
+
+
+</script>
+<div class="lightbox" id="lightbox" onclick="lbClickOutside(event)">
+  <button class="lb-close" onclick="lbClose()" title="Close (Esc)">✕</button>
+  <button class="lb-arrow prev" id="lb-prev" onclick="lbStep(-1)">‹</button>
+  <img id="lb-img" src="" alt="Full size photo">
+  <button class="lb-arrow next" id="lb-next" onclick="lbStep(1)">›</button>
+  <div class="lb-counter" id="lb-counter"></div>
+</div>
+
+</body>
+</html>
