@@ -351,7 +351,12 @@ input[type=file]{display:none}
   </div>
   <div class="field"><label>Photos</label>
     <div class="photo-grid" id="photo-grid"><div class="add-photo-btn" onclick="document.getElementById('pi').click()">＋</div></div>
+    <div id="photo-btns" style="display:none;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+      <button class="action-btn" onclick="document.getElementById('pi-cam').click()">📷 Camera</button>
+      <button class="action-btn" onclick="document.getElementById('pi').click()">🖼 Gallery</button>
+    </div>
     <input type="file" id="pi" accept="image/*" multiple onchange="handlePhotos(this)">
+    <input type="file" id="pi-cam" accept="image/*" capture="environment" onchange="handlePhotos(this)">
   </div>
   <div class="field"><label>Target ID (TID)</label>
     <div class="tabs">
@@ -649,8 +654,28 @@ async function readFile(fh,name){try{const h=await fh.getFileHandle(name);const 
 async function delFile(fh,name){try{await fh.removeEntry(name);}catch{}}
 
 // ── Photos ──
+function initPhotoBtns(){
+  // Show Camera / Gallery buttons only on touch devices (phones/tablets)
+  const btns=document.getElementById('photo-btns');
+  if(btns&&('ontouchstart' in window||navigator.maxTouchPoints>0)){
+    btns.style.display='grid';
+  }
+}
 function handlePhotos(inp){Array.from(inp.files).forEach(f=>{const r=new FileReader();r.onload=e=>{newPhotos.push({blob:f,dataUrl:e.target.result});renderGrid();};r.readAsDataURL(f);});inp.value='';}
-function renderGrid(){const g=document.getElementById('photo-grid');g.innerHTML='';newPhotos.forEach((p,i)=>{const d=document.createElement('div');d.className='photo-thumb';d.innerHTML='<img src="'+p.dataUrl+'"><button class="rp" onclick="rmPhoto('+i+')">×</button>';g.appendChild(d);});const a=document.createElement('div');a.className='add-photo-btn';a.textContent='＋';a.onclick=()=>document.getElementById('pi').click();g.appendChild(a);}
+function renderGrid(){
+  const g=document.getElementById('photo-grid');
+  g.innerHTML='';
+  newPhotos.forEach((p,i)=>{
+    const d=document.createElement('div');d.className='photo-thumb';
+    d.innerHTML='<img src="'+p.dataUrl+'"><button class="rp" onclick="rmPhoto('+i+')">×</button>';
+    g.appendChild(d);
+  });
+  const a=document.createElement('div');a.className='add-photo-btn';a.textContent='＋';
+  // On touch devices the + tile opens the gallery (camera button is separate below)
+  // On desktop it opens the file picker directly
+  a.onclick=()=>document.getElementById('pi').click();
+  g.appendChild(a);
+}
 function rmPhoto(i){newPhotos.splice(i,1);renderGrid();}
 function handleTidPhoto(inp){const f=inp.files[0];if(!f)return;tidDP=f;const r=new FileReader();r.onload=e=>{document.getElementById('ocr-img').src=e.target.result;document.getElementById('ocr-prev').style.display='block';};r.readAsDataURL(f);inp.value='';}
 
@@ -1429,6 +1454,7 @@ function switchView(n){
   if(n==='sites'){renderSites();pushState('sites');}
   if(n==='new'){
     clearForm();
+    initPhotoBtns();
     // Pre-select active site filter if one is set
     if(activeSF){
       updateSiteDrop();
